@@ -21,7 +21,7 @@ app.get(/geocode/, function(req, res) {
   var lon = req.query.longitude || false;
   var latlng = req.query.latlng || false;
   var maxResults = req.query.maxResults || 1;
-  var lang = req.query.language || req.acceptsLanguages()[0].substr(0, 2).toLowerCase;
+  var lang = req.query.language || (req.acceptsLanguages()[0] && req.acceptsLanguages()[0].substr(0, 2).toLowerCase());
   if (!! latlng) {
 	  var components=latlng.split(',');
 	  if (components.length == 2) {
