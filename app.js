@@ -104,8 +104,8 @@ function googlify(address,language) {
 		formatted_address: prettify(address, language),
                 geometry: {
                     location: {
-                       lat: geoNameResult.latitude,
-                        lng: geoNameResult.longitude
+                        lat: add.latitude,
+                        lng: add.longitude
                     },
                     location_type: 'GEOMETRIC_CENTER'
                 },
