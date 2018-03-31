@@ -29,10 +29,10 @@
 
 'use strict';
 
-var DEBUG = true;
-
+var debug = require('debug')('local-reverse-geocoder');
 var fs = require('fs');
 var path = require('path');
+var parse = require('csv-parse');
 var kdTree = require('kdt');
 var request = require('request');
 var unzip = require('unzip2');
@@ -134,19 +134,19 @@ var geocoder = {
     var timestampedFilename = GEONAMES_DUMP + '/' + subdir + '/' +
         fileBaseName + '_' + now + '.txt';
     if (fs.existsSync(timestampedFilename)) {
-      if (DEBUG) console.log('Using cached GeoNames ' + displayName + ' data from ' +
+      debug('Using cached GeoNames " + displayName + ' data from ' +
           timestampedFilename);
       return callback(null, timestampedFilename);
     }
 
     var filename = GEONAMES_DUMP + '/' + subdir + '/' + fileBaseName + '.txt';
     if (fs.existsSync(filename)) {
-      if (DEBUG) console.log('Using cached GeoNames alternate names data from ' +
+      debug('Using cached GeoNames alternate names data from ' +
           filename);
       return callback(null, filename);
     }
 
-    if (DEBUG) console.log('Getting GeoNames ' + displayName  + ' data from ' +
+    debug('Getting GeoNames ' + displayName  + ' data from ' +
         GEONAMES_URL + fileBaseName + '.zip (this may take a while)');
     var options = {
 		proxy: process.env.PROXY,
@@ -158,7 +158,7 @@ var geocoder = {
         return callback('Error downloading GeoNames ' + displayName + ' data' +
             (err ? ': ' + err : ''));
       }
-      if (DEBUG) console.log('Received zipped GeoNames ' + displayName + ' data');
+      debug('Received zipped GeoNames ' + displayName + ' data');
       // Store a dump locally
       if (!fs.existsSync(GEONAMES_DUMP + '/' + subdir)) {
         fs.mkdirSync(GEONAMES_DUMP + '/' + subdir);
@@ -175,7 +175,7 @@ var geocoder = {
             .on('close', function() {
               fs.renameSync(filename, timestampedFilename);
               fs.unlinkSync(zipFilename);
-              if (DEBUG) console.log('Unzipped GeoNames ' + displayName + ' data');
+              debug('Unzipped GeoNames ' + displayName + ' data');
               // Housekeeping, remove old files
               var currentFileName = path.basename(timestampedFilename);
               fs.readdirSync(GEONAMES_DUMP + '/' + subdir).forEach(
@@ -187,7 +187,7 @@ var geocoder = {
               return callback(null, timestampedFilename);
             });
       } catch (e) {
-        if (DEBUG) console.log('Warning: ' + e);
+        debug('Warning: ' + e);
         return callback(null, timestampedFilename);
       }
     });
@@ -199,19 +199,19 @@ var geocoder = {
     var timestampedFilename = GEONAMES_DUMP + '/' + subdir + '/' +
         fileBaseName + '_' + now + '.txt';
     if (fs.existsSync(timestampedFilename)) {
-      if (DEBUG) console.log('Using cached GeoNames ' + displayName + ' data from ' +
+      debug('Using cached GeoNames ' + displayName + ' data from ' +
           timestampedFilename);
       return callback(null, timestampedFilename);
     }
 
     var filename = GEONAMES_DUMP + '/' + subdir + '/' + fileBaseName + '.txt';
     if (fs.existsSync(filename)) {
-      if (DEBUG) console.log('Using cached GeoNames alternate names data from ' +
+      debug('Using cached GeoNames alternate names data from ' +
           filename);
       return callback(null, filename);
     }
 
-    if (DEBUG) console.log('Getting GeoNames ' + displayName  + ' data from ' +
+    debug('Getting GeoNames ' + displayName  + ' data from ' +
         GEONAMES_URL + fileBaseName + '.txt (this may take a while)');
     var options = {
 		proxy: process.env.PROXY,
@@ -363,11 +363,11 @@ var geocoder = {
   },
 
   _getGeoNamesCitiesData: function(callback) {
-  	return this._getGeoDataZipFile(callback, 'cities', CITIES_FILE, 'cities');
+    return this._getGeoDataZipFile(callback, 'cities', CITIES_FILE, 'cities');
   },
 
   _parseGeoNamesCitiesCsv: function(pathToCsv, callback) {
-    if (DEBUG) console.log('Started parsing cities.txt (this may take a ' +
+    debug('Started parsing cities.txt (this may take a ' +
         'while)');
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
@@ -397,15 +397,41 @@ var geocoder = {
 		}
 		data.push(lineObj);
     }).on('close', function() {
-      if (DEBUG) console.log('Finished parsing cities.txt');
-      if (DEBUG) console.log('Started building cities k-d tree (this may take ' +
+      debug('Finished parsing cities.txt');
+      debug('Started building cities k-d tree (this may take ' +
           'a while)');
+
+/*
+  _parseGeoNamesCitiesCsv: function(pathToCsv, callback) {
+    debug('Started parsing cities.txt (this  may take a ' +
+      'while)');
+    var data = [];
+    var lenI = GEONAMES_COLUMNS.length;
+    var that = this;
+    var content = fs.readFileSync(pathToCsv);
+    parse(content, {delimiter: '\t', quote: ''}, function(err, lines) {
+      if (err) {
+        return callback(err);
+      }
+      lines.forEach(function(line) {
+        var lineObj = {};
+        for (var i = 0; i < lenI; i++) {
+          var column = line[i] || null;
+          lineObj[GEONAMES_COLUMNS[i]] = column;
+        }
+        data.push(lineObj);
+      });
+
+      debug('Finished parsing cities.txt');
+      debug('Started building cities k-d tree (this may take ' +
+        'a while)');
+*/
       var dimensions = [
         'latitude',
         'longitude'
       ];
       that._kdTree = kdTree.createKdTree(data, that._distanceFunc, dimensions);
-      if (DEBUG) console.log('Finished building cities k-d tree');
+      debug('Finished building cities k-d tree');
       return callback();
     });
   },
@@ -415,7 +441,7 @@ var geocoder = {
   },
 
   _parseGeoNamesAllCountriesCsv: function(pathToCsv, callback) {
-    if (DEBUG) console.log('Started parsing all countries.txt (this  may take ' +
+    debug('Started parsing all countries.txt (this  may take ' +
         'a while)');
     var that = this;
     // Indexes
@@ -453,12 +479,13 @@ var geocoder = {
           that._admin4Codes[key + '.' + line[admin4CodeIndex]] = lineObj;
         }
       }
-      if (counter % 10000 === 0) {
-        if (DEBUG) console.log('Parsing progress all countries ' + counter);
+      if (counter % 100000 === 0) {
+        debug('Parsing progress all countries ' + counter);
       }
       counter++;
-    }).on('close', function() {
-      if (DEBUG) console.log('Finished parsing all countries.txt');
+    });
+    lineReader.on('close', function() {
+      debug('Finished parsing all countries.txt');
       return callback();
     });
   },
@@ -486,7 +513,7 @@ var geocoder = {
       options.load.alternateNames = true;
     }
 
-    if (DEBUG) console.log('Initializing local reverse geocoder using dump ' +
+    debug('Initializing local reverse geocoder using dump ' +
         'directory: ' + GEONAMES_DUMP);
     // Create local cache folder
     if (!fs.existsSync(GEONAMES_DUMP)) {
@@ -596,6 +623,12 @@ var geocoder = {
     }
     var functions = [];
     points.forEach(function(point, i) {
+      point = {
+        latitude: parseFloat(point.latitude),
+        longitude: parseFloat(point.longitude)
+      };
+      debug('Look-up request for point ' +
+          JSON.stringify(point));
       functions[i] = function(innerCallback) {
         var result = that._kdTree.nearest(point, maxResults+3);
         
@@ -658,7 +691,7 @@ var geocoder = {
             result[j] = result[j][0];
           }
         }
-/*        DEBUG && console.log('Found result(s) for point ' +
+/*      debug('Found result(s) for point ' +
             JSON.stringify(point) + result.map(function(subResult, i) {
               return '\n  (' + (++i) + ') {"geoNameId":"' +
                   subResult.geoNameId + '",' + '"name":"' + subResult.name +
@@ -671,7 +704,7 @@ var geocoder = {
     async.series(
       functions,
     function(err, results) {
-      if (DEBUG) console.log('Delivering results');
+      debug('Delivering joint results');
       return callback(null, results);
     });
   }

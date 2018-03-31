@@ -21,7 +21,7 @@ $ npm install local-reverse-geocoder
 
 # Usage in Node.js
 
-## LookUp
+## Look Up
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -63,8 +63,8 @@ geocoder.lookUp(points, maxResults, function(err, res) {
 
 ## Init
 
-You can optionally initialize the geocoder prior to the first call to lookUp.  This ensures
-that all files are loaded into the cache prior to making the first call. 
+You can optionally initialize the geocoder prior to the first call to lookUp.
+This ensures that all files are loaded into the cache prior to making the first call.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -74,9 +74,9 @@ geocoder.init({}, function() {
 });
 ```
 
-Optionally init also allows you to specify which files to load data from.  This reduces 
-initialization time and the runtime memory footprint of the nodejs process.  By default
-all files are loaded.
+Optionally ```init``` also allows you to specify which files to load data from.
+This reduces initialization time and the runtime memory footprint of the nodejs process.
+By default all files are loaded.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -87,7 +87,7 @@ geocoder.init({load:{admin1: true, admin2: false, admin3And4: false, alternateNa
 
 ```
 
-Optionally init allows you to specify the directory that geonames files are downloaded and cached in.
+Optionally ```init``` allows you to specify the directory that geonames files are downloaded and cached in.
 
 ```javascript
 var geocoder = require('local-reverse-geocoder');
@@ -328,19 +328,31 @@ like Google's
 [reverse geocoding API](https://developers.google.com/maps/documentation/javascript/geocoding#ReverseGeocoding).
 (Full disclosure: the author is currently employed by Google.)
 
-# A Word on Speed
+# A Word on Initialization Speed
 
 The initial lookup takes quite a while, as the geocoder has to download roughly
 300MB of data that it then caches locally (unzipped, this occupies about 1.3GB
 of disk space). All follow-up requests are lightning fast.
+
+# A Word on Data Freshness
+
 By default, the local [GeoNames dump](http://download.geonames.org/export/dump/) data gets refreshed each day.
 You can override this behavior by removing the timestamp from the files in the `./geonames_dump` download folder.
 If you don't need admin1, admin2, admin3, admin4 or alternate names you can turn them
 off in a manual init call and decrease load time. (Unify modification: admin3 and admin4 are turned off by default)
 
+# A Word on Memory Usage
+
+If you run into a ```FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory``` issue,
+try running node with the [V8 option](https://github.com/nodejs/node/issues/7937) ```--max-old-space-size=2000```.
+
+# A Word on Debugging
+
+To turn on debug logging add a DEBUG=local-reverse-geocoder environment variable on the command line.
+
 # License
-Copyright 2015 Thomas Steiner (tomac@google.com)
-Portions Copyright 2016 Unify Software and Solutions GmbH & Co. KG (jan.egner@unify.com)
+Copyright 2017 Thomas Steiner (tomac@google.com)
+Portions Copyright 2016-2018 Unify Software and Solutions GmbH & Co. KG (jan.egner@atos.net)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
