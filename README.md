@@ -16,7 +16,7 @@ of Highland Beach!)
 
 # Installation
 ```bash
-$ npm install local-reverse-geocoder
+$ npm install github:JanEgner/local-reverse-geocoder
 ```
 
 # Usage in Node.js
@@ -148,7 +148,7 @@ When called in this way, the service will return a result that conforms to the G
 
 An output array that maps each point in the input array (or input object converted to a single-element array) to the `maxResults` closest addresses.
 
-The measurement units are used [as defined by GenoNames](http://www.geonames.org/export/web-services.html), for example, ```elevation``` is measured in meters. The ```distance``` value is dynamically calculated based on the [haversine distance](http://www.movable-type.co.uk/scripts/latlong.html) for the input point(s) to each of the particular results points and is measured in kilometers.
+The measurement units are used [as defined by GeoNames](http://www.geonames.org/export/web-services.html), for example, ```elevation``` is measured in meters. The ```distance``` value is dynamically calculated based on the [haversine distance](http://www.movable-type.co.uk/scripts/latlong.html) for the input point(s) to each of the particular results points and is measured in kilometers.
 
 ```javascript
 [
@@ -351,7 +351,7 @@ try running node with the [V8 option](https://github.com/nodejs/node/issues/7937
 To turn on debug logging add a DEBUG=local-reverse-geocoder environment variable on the command line.
 
 # License
-Copyright 2017 Thomas Steiner (tomac@google.com)
+Copyright 2017 Thomas Steiner (tomac@google.com)   
 Portions Copyright 2016-2018 Unify Software and Solutions GmbH & Co. KG (jan.egner@atos.net)
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -376,5 +376,5 @@ that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 # Contributors
 - [Chris Kinsman](https://github.com/chriskinsman)
 - [@bloodfire91](https://github.com/bloodfire91)
+- [Jan Egner](https://github.com/JanEgner)
 
-[![NPM](https://nodei.co/npm/local-reverse-geocoder.png?downloads=true)](https://nodei.co/npm/local-reverse-geocoder/)

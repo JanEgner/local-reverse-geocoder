@@ -32,7 +32,6 @@
 var debug = require('debug')('local-reverse-geocoder');
 var fs = require('fs');
 var path = require('path');
-var parse = require('csv-parse');
 var kdTree = require('kdt');
 var request = require('request');
 var unzip = require('unzip2');
@@ -134,14 +133,14 @@ var geocoder = {
     var timestampedFilename = GEONAMES_DUMP + '/' + subdir + '/' +
         fileBaseName + '_' + now + '.txt';
     if (fs.existsSync(timestampedFilename)) {
-      debug('Using cached GeoNames " + displayName + ' data from ' +
+      debug('Using cached GeoNames ' + displayName + ' data from ' +
           timestampedFilename);
       return callback(null, timestampedFilename);
     }
 
     var filename = GEONAMES_DUMP + '/' + subdir + '/' + fileBaseName + '.txt';
     if (fs.existsSync(filename)) {
-      debug('Using cached GeoNames alternate names data from ' +
+      debug('Using cached GeoNames ' + displayName + ' data from ' +
           filename);
       return callback(null, filename);
     }
@@ -149,7 +148,7 @@ var geocoder = {
     debug('Getting GeoNames ' + displayName  + ' data from ' +
         GEONAMES_URL + fileBaseName + '.zip (this may take a while)');
     var options = {
-		proxy: process.env.PROXY,
+      proxy: process.env.PROXY,
       url: GEONAMES_URL + fileBaseName + '.zip',
       encoding: null
     };
@@ -206,7 +205,7 @@ var geocoder = {
 
     var filename = GEONAMES_DUMP + '/' + subdir + '/' + fileBaseName + '.txt';
     if (fs.existsSync(filename)) {
-      debug('Using cached GeoNames alternate names data from ' +
+      debug('Using cached GeoNames ' + displayName + ' data from ' +
           filename);
       return callback(null, filename);
     }
@@ -214,7 +213,7 @@ var geocoder = {
     debug('Getting GeoNames ' + displayName  + ' data from ' +
         GEONAMES_URL + fileBaseName + '.txt (this may take a while)');
     var options = {
-		proxy: process.env.PROXY,
+    proxy: process.env.PROXY,
       url: GEONAMES_URL + fileBaseName + '.txt',
       encoding: null
     };
@@ -223,7 +222,7 @@ var geocoder = {
         return callback('Error downloading GeoNames ' + displayName + ' data' +
             (err ? ': ' + err : ''));
       }
-      if (DEBUG) console.log('Received GeoNames ' + displayName + ' data');
+      debug('Received GeoNames ' + displayName + ' data');
       // Store a dump locally
       if (!fs.existsSync(GEONAMES_DUMP + '/' + subdir)) {
         fs.mkdirSync(GEONAMES_DUMP + '/' + subdir);
@@ -244,58 +243,58 @@ var geocoder = {
       }
       return callback(null, timestampedFilename);
     });
-  },	
-  
+  },
+
   _getGeoNamesAlternateNamesData: function(callback) {
-  	return this._getGeoDataZipFile(callback, 'alternate_names', ALTERNATE_NAMES_FILE, 'alternate names');
+    return this._getGeoDataZipFile(callback, 'alternate_names', ALTERNATE_NAMES_FILE, 'alternate names');
   },
 
   _parseGeoNamesAlternateNamesCsv: function(pathToCsv, callback) {
     var that = this;
     that._alternateNames = {};
-	var lineReader = require('readline').createInterface({
-		input: require('fs').createReadStream(pathToCsv)
-	});
+    var lineReader = require('readline').createInterface({
+      input: require('fs').createReadStream(pathToCsv)
+    });
 
-	lineReader.on('line', function (line) {
-        line = line.split('\t');
-        // Key on second column which is the geoNameId
-		if (line[2] && line[2] !== '' && line[2] !== 'link') {
-			if (!that._alternateNames[line[1]]) {
-			  that._alternateNames[line[1]] = {};
-			}
-			if (! that._alternateNames[line[1]][line[2]] || line[4]=='1') {
-				// the following construct seems weird, but saves lots of heap
-				// space (hundreds of megabytes) because the sliced strings are released.
-				that._alternateNames[line[1]][line[2]] = JSON.parse(JSON.stringify(line[3]));
-			}
-		}
+    lineReader.on('line', function (line) {
+      line = line.split('\t');
+      // Key on second column which is the geoNameId
+      if (line[2] && line[2] !== '' && line[2] !== 'link') {
+        if (!that._alternateNames[line[1]]) {
+          that._alternateNames[line[1]] = {};
+        }
+        if (! that._alternateNames[line[1]][line[2]] || line[4]=='1') {
+          // the following construct seems weird, but saves lots of heap
+          // space (hundreds of megabytes) because the sliced strings are released.
+          that._alternateNames[line[1]][line[2]] = JSON.parse(JSON.stringify(line[3]));
+        }
+      }
     }).on('close', function() {
       return callback();
     });
   },
 
   _getGeoNamesCountryInfoData: function(callback) {
-  	return this._getGeoDataTextFile(callback, 'country_info', COUNTRY_INFO_FILE, 'country');
+    return this._getGeoDataTextFile(callback, 'country_info', COUNTRY_INFO_FILE, 'country');
   },
 
   _parseGeoNamesCountryInfoCsv: function(pathToCsv, callback) {
     var that = this;
     that._countryInfo = {};
-	var lineReader = require('readline').createInterface({
-		input: require('fs').createReadStream(pathToCsv)
-	});
+  var lineReader = require('readline').createInterface({
+    input: require('fs').createReadStream(pathToCsv)
+  });
 
-	lineReader.on('line', function (line) {
+  lineReader.on('line', function (line) {
       line = line.split('\t');
-	  if (line[0] > '' && line[16] && line[16] !== '') {
-		  that._countryInfo[line[0]] = {};
-		  that._countryInfo[line[0]].geoId = line[16];
-		  
-		  if (that._alternateNames[line[16]]) {
-			that._countryInfo[line[0]].alternateNames=that._alternateNames[line[16]];
-			}
-	  }
+    if (line[0] > '' && line[16] && line[16] !== '') {
+      that._countryInfo[line[0]] = {};
+      that._countryInfo[line[0]].geoId = line[16];
+
+      if (that._alternateNames[line[16]]) {
+        that._countryInfo[line[0]].alternateNames=that._alternateNames[line[16]];
+      }
+    }
     }).on('close', function() {
       return callback();
     });
@@ -303,18 +302,18 @@ var geocoder = {
 
   
   _getGeoNamesAdmin1CodesData: function(callback) {
-  	return this._getGeoDataTextFile(callback, 'admin1_codes', ADMIN_1_CODES_FILE, 'admin 1 codes');
+    return this._getGeoDataTextFile(callback, 'admin1_codes', ADMIN_1_CODES_FILE, 'admin 1 codes');
   },
 
   _parseGeoNamesAdmin1CodesCsv: function(pathToCsv, callback) {
     var that = this;
     var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
     that._admin1Codes = {};
-	var lineReader = require('readline').createInterface({
-		input: require('fs').createReadStream(pathToCsv)
-	});
+  var lineReader = require('readline').createInterface({
+    input: require('fs').createReadStream(pathToCsv)
+  });
 
-	lineReader.on('line', function (line) {
+  lineReader.on('line', function (line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var value = line[i] || null;
@@ -324,27 +323,27 @@ var geocoder = {
           that._admin1Codes[line[0]][GEONAMES_ADMIN_CODES_COLUMNS[i]] = value;
         }
       }
- 	  if (that._alternateNames[line[3]]) {
-		that._admin1Codes[line[0]].alternateNames=that._alternateNames[line[3]];
-	  }
+    if (that._alternateNames[line[3]]) {
+      that._admin1Codes[line[0]].alternateNames=that._alternateNames[line[3]];
+    }
     }).on('close', function() {
       return callback();
     });
   },
 
   _getGeoNamesAdmin2CodesData: function(callback) {
-  	return this._getGeoDataTextFile(callback, 'admin2_codes', ADMIN_2_CODES_FILE, 'admin 2 codes');
+    return this._getGeoDataTextFile(callback, 'admin2_codes', ADMIN_2_CODES_FILE, 'admin 2 codes');
   },
 
   _parseGeoNamesAdmin2CodesCsv: function(pathToCsv, callback) {
     var that = this;
     var lenI = GEONAMES_ADMIN_CODES_COLUMNS.length;
     that._admin2Codes = {};
-	var lineReader = require('readline').createInterface({
-		input: require('fs').createReadStream(pathToCsv)
-	});
+  var lineReader = require('readline').createInterface({
+    input: require('fs').createReadStream(pathToCsv)
+  });
 
-	lineReader.on('line', function (line) {
+  lineReader.on('line', function (line) {
       line = line.split('\t');
       for (var i = 0; i < lenI; i++) {
         var value = line[i] || null;
@@ -354,9 +353,8 @@ var geocoder = {
           that._admin2Codes[line[0]][GEONAMES_ADMIN_CODES_COLUMNS[i]] = JSON.parse(JSON.stringify(value));
         }
       }
- 	  if (that._alternateNames[line[3]])
-		that._admin2Codes[line[0]].alternateNames=that._alternateNames[line[3]];
-
+    if (that._alternateNames[line[3]])
+      that._admin2Codes[line[0]].alternateNames=that._alternateNames[line[3]];
     }).on('close', function() {
       return callback();
     });
@@ -372,60 +370,42 @@ var geocoder = {
     var data = [];
     var lenI = GEONAMES_COLUMNS.length;
     var that = this;
-	
-	var lineReader = require('readline').createInterface({
-		input: require('fs').createReadStream(pathToCsv)
-	});
+    var latitudeIndex = GEONAMES_COLUMNS.indexOf('latitude');
+    var longitudeIndex = GEONAMES_COLUMNS.indexOf('longitude');
 
-	lineReader.on('line', function (line) {
+    var lineReader = require('readline').createInterface({
+      input: require('fs').createReadStream(pathToCsv)
+    });
+
+    lineReader.on('line', function (line) {
       var lineObj = {};
       line = JSON.parse(JSON.stringify(line)).split('\t');
-	  
+
       for (var i = 0; i < lenI; i++) {
         var column = line[i] || null;
         lineObj[GEONAMES_COLUMNS[i]] = column;
       }
-	  
-      if (lineObj.latitude !== null)
-		if (that._alternateNames[lineObj.geoNameId]) {
-			var alt = that._alternateNames[lineObj.geoNameId] || null;
-			for (var x in alt) {
-				if (alt[x]==lineObj.name)
-					delete alt[x];
-			}
-			lineObj.alternateNames=alt;
-		}
-		data.push(lineObj);
+      
+      var lng = lineObj[GEONAMES_COLUMNS[latitudeIndex]];
+      var lat = lineObj[GEONAMES_COLUMNS[longitudeIndex]];
+      //dont add lineObj without lat/lng pair
+      if (lng !== null && lng !== undefined && !isNaN(lng) &&
+          lat !== null && lat !== undefined && !isNaN(lat)) {
+        if (that._alternateNames[lineObj.geoNameId]) {
+          var alt = that._alternateNames[lineObj.geoNameId] || null;
+          for (var x in alt) {
+            if (alt[x]==lineObj.name)
+              delete alt[x];
+          }
+          lineObj.alternateNames=alt;
+        }
+        data.push(lineObj);
+      }
     }).on('close', function() {
       debug('Finished parsing cities.txt');
       debug('Started building cities k-d tree (this may take ' +
-          'a while)');
+            'a while)');
 
-/*
-  _parseGeoNamesCitiesCsv: function(pathToCsv, callback) {
-    debug('Started parsing cities.txt (this  may take a ' +
-      'while)');
-    var data = [];
-    var lenI = GEONAMES_COLUMNS.length;
-    var that = this;
-    var content = fs.readFileSync(pathToCsv);
-    parse(content, {delimiter: '\t', quote: ''}, function(err, lines) {
-      if (err) {
-        return callback(err);
-      }
-      lines.forEach(function(line) {
-        var lineObj = {};
-        for (var i = 0; i < lenI; i++) {
-          var column = line[i] || null;
-          lineObj[GEONAMES_COLUMNS[i]] = column;
-        }
-        data.push(lineObj);
-      });
-
-      debug('Finished parsing cities.txt');
-      debug('Started building cities k-d tree (this may take ' +
-        'a while)');
-*/
       var dimensions = [
         'latitude',
         'longitude'
@@ -437,7 +417,7 @@ var geocoder = {
   },
 
   _getGeoNamesAllCountriesData: function(callback) {
-  	return this._getGeoDataZipFile(callback, 'all_countries', ALL_COUNTRIES_FILE, 'all countries');
+    return this._getGeoDataZipFile(callback, 'all_countries', ALL_COUNTRIES_FILE, 'all countries');
   },
 
   _parseGeoNamesAllCountriesCsv: function(pathToCsv, callback) {
@@ -458,12 +438,12 @@ var geocoder = {
     var counter = 0;
     that._admin3Codes = {};
     that._admin4Codes = {};
-	var lineReader = require('readline').createInterface({
-		input: require('fs').createReadStream(pathToCsv)
-	});
+  var lineReader = require('readline').createInterface({
+    input: require('fs').createReadStream(pathToCsv)
+  });
 
-	lineReader.on('line', function (line) {
-	  line = line.split('\t');
+  lineReader.on('line', function (line) {
+    line = line.split('\t');
       var featureCode = line[featureCodeIndex];
       if ((featureCode === 'ADM3') || (featureCode === 'ADM4')) {
         var lineObj = {
@@ -483,8 +463,7 @@ var geocoder = {
         debug('Parsing progress all countries ' + counter);
       }
       counter++;
-    });
-    lineReader.on('close', function() {
+    }).on('close', function() {
       debug('Finished parsing all countries.txt');
       return callback();
     });
@@ -529,7 +508,7 @@ var geocoder = {
 
           that._getGeoNamesCitiesData.bind(that),
           that._parseGeoNamesCitiesCsv.bind(that)
- 	    ], function() {
+      ], function() {
           return waterfallCallback();
         });
       },
@@ -538,7 +517,7 @@ var geocoder = {
         async.waterfall([
           that._getGeoNamesCountryInfoData.bind(that),
           that._parseGeoNamesCountryInfoCsv.bind(that)
- 	    ], function() {
+      ], function() {
           return waterfallCallback();
         });
       },
@@ -580,13 +559,13 @@ var geocoder = {
         } else {
           return setImmediate(waterfallCallback);
         }
-	  }
+    }
     ],
     // Main callback
     function(err) {
-	  that._alternateNames = null;
+    that._alternateNames = null;
 
-	  if (err) {
+    if (err) {
         throw(err);
       }
       return callback();
@@ -612,7 +591,7 @@ var geocoder = {
     var that = this;
     // If not yet initialied, then bail out
     if (!this._kdTree) {
-	  return (callback ('{}', null));	
+    return (callback ('{}', null)); 
 /*      return this.init({}, function() {
         return that.lookUp(points, maxResults, callback);
       }); */
@@ -632,11 +611,11 @@ var geocoder = {
       functions[i] = function(innerCallback) {
         var result = that._kdTree.nearest(point, maxResults+3);
         
-		result.sort(function (a, b) {
-		  return (100+Number(b[0].population))*a[1]*a[1] - (100+Number(a[0].population))*b[1]*b[1];
-		});
-		result = result.slice (0, maxResults);
-		
+        result.sort(function (a, b) {
+          return (100+Number(b[0].population))*a[1]*a[1] - (100+Number(a[0].population))*b[1]*b[1];
+        });
+        result = result.slice (0, maxResults);
+
         for (var j = 0, lenJ = result.length; j < lenJ; j++) {
           if (result && result[j] && result[j][0]) {
             var countryCode = result[j][0].countryCode || '';
@@ -684,7 +663,7 @@ var geocoder = {
 */
             if (that._countryInfo[countryCode])
                 result[j][0].countryAltNames=that._countryInfo[countryCode].alternateNames;
-				
+
             // Pull in the k-d tree distance in the main object
             result[j][0].distance = result[j][1];
             // Simplify the output by not returning an array

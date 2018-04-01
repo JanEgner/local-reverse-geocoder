@@ -32,7 +32,7 @@
   "bugs": {
     "url": "https://github.com/JanEgner/local-reverse-geocoder/issues"
   },
-  "homepage": "https://github.com/JanEgner/local-reverse-geocoder"
+  "homepage": "https://github.com/JanEgner/local-reverse-geocoder",
   "engines": {
     "node": ">=4.8.x",
     "npm": ">=2.15.x"
