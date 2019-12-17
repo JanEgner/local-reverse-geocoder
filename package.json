@@ -1,6 +1,6 @@
 {
   "name": "local-reverse-geocoder",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Implements a local reverse geocoder based on GeoNames",
   "main": "geocoder.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "reverse",
     "local"
   ],
-  "author": "Thomas Steiner",
+  "author": "Thomas Steiner, Jan Egner",
   "license": "Apache-2.0",
   "dependencies": {
     "async": "^3.0.1",
@@ -27,12 +27,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tomayac/local-reverse-geocoder.git"
+    "url": "https://github.com/JanEgner/local-reverse-geocoder.git"
   },
   "bugs": {
-    "url": "https://github.com/tomayac/local-reverse-geocoder/issues"
+    "url": "https://github.com/JanEgner/local-reverse-geocoder/issues"
   },
-  "homepage": "https://github.com/tomayac/local-reverse-geocoder",
+  "homepage": "https://github.com/JanEgner/local-reverse-geocoder",
   "engines": {
     "node": ">=4.8.x",
     "npm": ">=2.15.x"

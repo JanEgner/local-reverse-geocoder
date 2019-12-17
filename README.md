@@ -1,7 +1,5 @@
 # Local Reverse Geocoder
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/tomayac/local-reverse-geocoder.svg)](https://greenkeeper.io/)
-
 This library provides a local reverse geocoder for Node.js that is based on
 [GeoNames](http://download.geonames.org/export/dump/) data. It is *local*
 in the sense that there are no calls to a remote service like the
@@ -10,9 +8,15 @@ and in consequence the gecoder is suitable for batch reverse geocoding.
 It is *reverse* in the sense that you give it a (list of) point(s), *i.e.*,
 a latitude/longitude pair, and it returns the closest city to that point.
 
+Unify modification: population data of cities (if available) is taken into account when
+selecting the closest place(s). For this, cities are modeled as circles with equal
+population density, so the distance is weighted by the inverse square root of the place's
+population. (The motivation was to put Unify's previous Boca Raton site into Boca instead
+of Highland Beach!)
+
 # Installation
 ```bash
-$ npm install local-reverse-geocoder
+$ npm install github:JanEgner/local-reverse-geocoder
 ```
 
 # Docker
@@ -105,6 +109,12 @@ geocoder.init({dumpDirectory: '/tmp/geonames'}, function() {
 
 ```
 
+Unify modification: the above "early initialization" is default when using app.js. To allow
+downloading the geonames data in corporate environments, support of the environment variable PROXY
+has been added. The content is passed through to the http request library, so the format is a URL like
+"http://\[user:password@\]proxyhost:port"
+
+
 # Usage of the Web Service
 
 You can use the built-in Web service by running `node app.js` as follows.
@@ -113,11 +123,43 @@ You can use the built-in Web service by running `node app.js` as follows.
 $ curl "http://localhost:3000/geocode?latitude=48.466667&longitude=9.133333&latitude=42.083333&longitude=3.1&maxResults=2"
 ```
 
+Unify modification: Additionally, a parameter "language" may be used to retrieve a simple form (see below) of localized names.
+If no name is available in the required language, English is used as a default; if that is not available either, we deliver whatever
+can be find. The language parameter must be a lower-case, 2-letter ISO 639-1 language code (e.g. en, de, fr). 
+
+Note: the "language" parameter is incompatible with the "maxResults" parameter and only supports one lat/long pair. If "language" is used, only the
+first result for the first lat/long pair is returned.
+
+```bash
+$ curl "http://localhost:3000/geocode?latitude=48.466667&longitude=9.133333&language=en"
+```
+
+Unify modification: For nicer manual testing, we also support writing lats and longs in "\[-\]hhh:mm\[:ss\[.dddd\]\]" notation instead of decimal.
+
+```bash
+$ curl "http://localhost:3000/geocode?latitude=48:25:00.000&longitude=9:10&language=en"
+```
+
+Unify modification: added https support. To enable, put standard openssl pem-formatted certificate and private key into the subdirectory 'cert' as
+server.crt and server.key. Default https port is 3001.
+
+Ports can be overridden by setting the environment variables PORT and/or PORTTLS to the desired port number(s). Setting a port to -1 disables it,
+i.e. use PORT=-1 to disable plain-text http communication.
+
+Unify modification: the service may alternatively be called using the Google reverse-geolocation service parameters, i.e. instead of providing
+latitude and longitude as separate parameters, the caller may also send a single "latlng" parameter whose value is the pair of lat/long numbers.
+
+```bash
+$ curl "http://localhost:3000/geocode?latlng=48.466667,9.133333
+```
+
+When called in this way, the service will return a result that conforms to the Google service's documentation.
+
 # Result Format
 
 An output array that maps each point in the input array (or input object converted to a single-element array) to the `maxResults` closest addresses.
 
-The measurement units are used [as defined by GenoNames](http://www.geonames.org/export/web-services.html), for example, ```elevation``` is measured in meters. The ```distance``` value is dynamically calculated based on the [haversine distance](http://www.movable-type.co.uk/scripts/latlong.html) for the input point(s) to each of the particular results points and is measured in kilometers.
+The measurement units are used [as defined by GeoNames](http://www.geonames.org/export/web-services.html), for example, ```elevation``` is measured in meters. The ```distance``` value is dynamically calculated based on the [haversine distance](http://www.movable-type.co.uk/scripts/latlong.html) for the input point(s) to each of the particular results points and is measured in kilometers.
 
 ```javascript
 [
@@ -275,6 +317,26 @@ The measurement units are used [as defined by GenoNames](http://www.geonames.org
 ]
 ```
 
+Unify modification: in case the "language" parameter is used, the output is a localized description of
+the location (including place, admin 1 name, and country name) plus the distance, e.g.
+
+```javascript
+{ 
+  "dispname": "Munich, Bavaria, Germany",
+  "distance": 18.366348543
+}
+```
+or
+```javascript
+{ 
+  "dispname": "München, Bayern, Deutschland",
+  "distance": 18.366348543
+}
+```
+
+In case the "latlng" parameter is used, the output is as close to the output of Google's reverse
+geolocation service as possible.
+
 # A Word on Accuracy
 
 By design, *i.e.*, due to the granularity of the available
@@ -297,7 +359,7 @@ of disk space). All follow-up requests are lightning fast.
 By default, the local [GeoNames dump](http://download.geonames.org/export/dump/) data gets refreshed each day.
 You can override this behavior by removing the timestamp from the files in the `./geonames_dump` download folder.
 If you don't need admin1, admin2, admin3, admin4 or alternate names you can turn them
-off in a manual init call and decrease load time.
+off in a manual init call and decrease load time. (Unify modification: admin3 and admin4 are turned off by default)
 
 # A Word on Memory Usage
 
@@ -309,7 +371,8 @@ try running node with the [V8 option](https://github.com/nodejs/node/issues/7937
 To turn on debug logging add a DEBUG=local-reverse-geocoder environment variable on the command line.
 
 # License
-Copyright 2017 Thomas Steiner (tomac@google.com)
+Copyright 2017 Thomas Steiner (tomac@google.com)   
+Portions Copyright 2016-2018 Unify Software and Solutions GmbH & Co. KG (jan.egner@atos.net)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -334,5 +397,5 @@ that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 - [@chriskinsman](https://github.com/chriskinsman)
 - [@bloodfire91](https://github.com/bloodfire91)
 - [@yjwong](https://github.com/yjwong)
+- [Jan Egner](https://github.com/JanEgner)
 
-[![NPM](https://nodei.co/npm/local-reverse-geocoder.png?downloads=true)](https://nodei.co/npm/local-reverse-geocoder/)
