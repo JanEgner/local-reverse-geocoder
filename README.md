@@ -125,7 +125,7 @@ $ curl "http://localhost:3000/geocode?latitude=48.466667&longitude=9.133333&lati
 
 Unify modification: Additionally, a parameter "language" may be used to retrieve a simple form (see below) of localized names.
 If no name is available in the required language, English is used as a default; if that is not available either, we deliver whatever
-can be find. The language parameter must be a lower-case, 2-letter ISO 639-1 language code (e.g. en, de, fr). 
+can be find. The language parameter must be a lower-case, 2-letter ISO 639-1 language code (e.g. en, de, fr)
 
 Note: the "language" parameter is incompatible with the "maxResults" parameter and only supports one lat/long pair. If "language" is used, only the
 first result for the first lat/long pair is returned.
@@ -321,14 +321,14 @@ Unify modification: in case the "language" parameter is used, the output is a lo
 the location (including place, admin 1 name, and country name) plus the distance, e.g.
 
 ```javascript
-{ 
+{
   "dispname": "Munich, Bavaria, Germany",
   "distance": 18.366348543
 }
 ```
 or
 ```javascript
-{ 
+{
   "dispname": "München, Bayern, Deutschland",
   "distance": 18.366348543
 }
@@ -371,7 +371,7 @@ try running node with the [V8 option](https://github.com/nodejs/node/issues/7937
 To turn on debug logging add a DEBUG=local-reverse-geocoder environment variable on the command line.
 
 # License
-Copyright 2017 Thomas Steiner (tomac@google.com)   
+Copyright 2017 Thomas Steiner (tomac@google.com)
 Portions Copyright 2016-2018 Unify Software and Solutions GmbH & Co. KG (jan.egner@atos.net)
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -397,5 +397,5 @@ that was ported to Node.js by [Luke Arduini](https://github.com/luk-/node-kdt).
 - [@chriskinsman](https://github.com/chriskinsman)
 - [@bloodfire91](https://github.com/bloodfire91)
 - [@yjwong](https://github.com/yjwong)
-- [Jan Egner](https://github.com/JanEgner)
+- [@JanEgner](https://github.com/JanEgner)
 
