@@ -140,7 +140,7 @@ Unify modification: For nicer manual testing, we also support writing lats and l
 $ curl "http://localhost:3000/geocode?latitude=48:25:00.000&longitude=9:10&language=en"
 ```
 
-Unify modification: added https support. To enable, put standard openssl pem-formatted certificate and private key into the subdirectory 'cert' as
+Unify modification: added https support. To enable, put a standard openssl pem-formatted certificate and private key into the subdirectory 'cert' as
 server.crt and server.key. Default https port is 3001.
 
 Ports can be overridden by setting the environment variables PORT and/or PORTTLS to the desired port number(s). Setting a port to -1 disables it,
